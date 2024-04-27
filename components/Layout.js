@@ -5,7 +5,7 @@ import Nav from "@/components/Nav";
 
 
 export default function Layout({children}) {
-  const { data: session } = useSession()
+  const { data: session } = useSession();
 
   if(!session){
     return (

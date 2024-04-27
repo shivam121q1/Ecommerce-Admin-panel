@@ -1,76 +1,38 @@
-import clientPromise from "../../lib/db";
-import mongoose from "mongoose";
-
-import { mongooseConnect } from "../../lib/mongoose";
-const Product = require("../../models/Product");
+import {Product} from "@/models/Product";
+import {mongooseConnect}  from "@/lib/mongoose"
+// import {isAdminRequest} from "@/pages/api/auth/[...nextauth]";
 
 export default async function handle(req, res) {
-  try {
-    console.log(req.method);
-    const { method } = req;
+  const {method} = req;
+  await mongooseConnect();
+  // await isAdminRequest(req,res);
 
-    await mongooseConnect();
-
-    if (method === "POST") {
-     
-        const { title, description, price } = req.body;
-        const ProductDoc = await Product.create({
-          title,
-          description,
-          price,
-        });
-
-        res.status(200).json({
-          success: true,
-          message: "Product Added Successfully",
-          ProductDoc,
-        });
-      }
-    
-    if (method === "GET") {
-      console.log(req.query?.id);
-      if (req.query?.id) {
-        res.json(await Product.findById({ _id: req.query.id }));
-      } else {
-        const ProductDoc = await Product.find();
-        console.log(ProductDoc);
-
-        if (!ProductDoc) {
-          res.status(403).json({
-            success: false,
-            message: "Not able to give data",
-          });
-        }
-
-        res.status(200).json({
-          success: true,
-          message: "Product fetched sucessfully",
-          ProductDoc,
-          // data:Product.find()
-        });
-      }
+  if (method === 'GET') {
+    if (req.query?.id) {
+      res.json(await Product.findOne({_id:req.query.id}));
+    } else {
+      res.json(await Product.find());
     }
-    if(method=== "PUT"){
-        const {title,description,price,_id} = req.body;
+  }
 
-        await Product.updateOne({_id},{title,description,price})
+  if (method === 'POST') {
+    const {title,description,price,images,category,properties} = req.body;
+    const productDoc = await Product.create({
+      title,description,price,images,category,properties,
+    })
+    res.json(productDoc);
+  }
 
-        res.json(true);
+  if (method === 'PUT') {
+    const {title,description,price,images,category,properties,_id} = req.body;
+    await Product.updateOne({_id}, {title,description,price,images,category,properties});
+    res.json(true);
+  }
+
+  if (method === 'DELETE') {
+    if (req.query?.id) {
+      await Product.deleteOne({_id:req.query?.id});
+      res.json(true);
     }
-    if (method === "DELETE") {
-        console.log(req.query?.id);
-        if (req.query?.id) {
-          res.json(await Product.findByIdAndDelete({ _id: req.query.id }));
-        } 
-  
-         
-      }
-  } catch (error) {
-    res.status(500).json({
-      success: false,
-      message: "Not able to fetch data",
-    });
-
-    console.log(error);
   }
 }
